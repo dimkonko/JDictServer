@@ -1,0 +1,75 @@
+buildscript {
+  repositories {
+    jcenter()
+  }
+  dependencies {
+    classpath 'org.hidetake:gradle-ssh-plugin:1.5.0'
+  }
+}
+
+apply plugin: 'org.hidetake.ssh'
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'war'
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+    compile 'org.eclipse.jetty:jetty-server:9.3.7.v20160115'
+    compile 'org.springframework:spring-webmvc:4.2.5.RELEASE'
+    
+}
+
+// SSH
+remotes {
+  webServer {
+    host = 'localhost'
+    user = 'tomcat'
+    password = 'tomcat'
+    port = 2222
+  }
+  webServerAdmin {
+    host = 'localhost'
+    user = 'vagrant'
+    port = 2222
+    identity = file('.vagrant/machines/default/virtualbox/private_key')
+  }
+}
+
+task stop_server << {
+    ssh.run {
+        session(remotes.webServerAdmin) {
+            execute 'sudo service tomcat stop'
+        }
+    }
+}
+
+task start_server << {
+    ssh.run {
+        session(remotes.webServerAdmin) {
+            execute 'sudo service tomcat start'
+        }
+    }
+}
+
+task start_rd << {
+    ssh.run {
+        session(remotes.webServerAdmin) {
+            execute 'sudo service tomcat start_debug'
+        }
+    }
+}
+
+task deploy << {
+  ssh.run {
+    session(remotes.webServer) {
+      put from: 'build/libs/RemoteTomcatDebug.war', into: '/var/tomcat/webapps'
+    }
+  }
+}

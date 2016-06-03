@@ -1,0 +1,38 @@
+---
+- name: Add tomcat group
+  group: name={{ tomcat_username }}
+
+- name: Add tomcat user
+  user: name={{ tomcat_username }} group={{ tomcat_username }} home={{ tomcat_home }} password={{ tomcat_pwd }} createhome=no
+  sudo: True
+
+- name: Stat Tomcat download folder
+  stat: path={{ tomcat_home }}
+  register: tomcat_stat
+
+- name: Download Tomcat 8
+  unarchive: src=http://apache.ip-connect.vn.ua/tomcat/tomcat-8/v{{ tomcat_ver }}/bin/apache-tomcat-{{ tomcat_ver }}.tar.gz dest=/opt/ copy=no
+  when: tomcat_stat.stat.exists == False
+
+- name: Move Tomcat to var
+  command: mv /opt/apache-tomcat-{{ tomcat_ver }} {{ tomcat_home }} {{ tomcat_home }}
+  when: tomcat_stat.stat.exists == False
+
+- name: Change ownership of Tomcat installation
+  file: path={{ tomcat_home }} owner={{ tomcat_username }} group={{ tomcat_username }} mode=0775 state=directory recurse=yes
+  when: tomcat_stat.stat.exists == False
+
+- name: Configure Tomcat server
+  template: src=server.xml dest={{ tomcat_home }}/conf
+
+- name: Configure Tomcat users
+  template: src=tomcat-users.xml dest={{ tomcat_home }}/conf
+
+- name: Install Tomcat init script
+  copy: src=files/tomcat-init-script.sh dest=/etc/init.d/tomcat mode=0755
+
+- name: Start Tomcat
+  service: name=tomcat state=started enabled=yes
+
+- name: wait for tomcat to start
+  wait_for: port={{ http_port }} delay=10

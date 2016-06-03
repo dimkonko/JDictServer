@@ -1,0 +1,16 @@
+---
+- hosts: all
+  sudo: true
+  vars:
+    http_port: 8080
+    tomcat_username: tomcat
+    tomcat_pwd: $6$BEvvxRTL$PLFJfB.KOjUceDm3CxA5rGQ7pD1meBA/UZ4u4vx.CjGbEvsV2qqkuaI//mEta3FZRcExbjHCYUlF9CRlvS9PT.
+    tomcat_ver: 8.0.35
+    tomcat_home: /var/tomcat
+    tomcat_server: "{{ tomcat_home }}/apache-tomcat-{{ tomcat_ver }}"
+  tasks:
+    - name: update apt cache
+      apt: update_cache=yes
+
+    - include: tasks/install_java.yml
+    - include: tasks/install_tomcat.yml
