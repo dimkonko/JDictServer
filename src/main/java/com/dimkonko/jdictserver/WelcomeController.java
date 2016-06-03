@@ -1,4 +1,4 @@
-package com.jdictapp;
+package com.dimkonko.jdictserver;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
